@@ -21,8 +21,8 @@
     XDBannerSetUp *setup = [[XDBannerSetUp alloc]init];
     setup.style = XD_LeftToRight;
     setup.needAutoChange = YES;
-    
-    _banner = [[XDBanner alloc]initWithFrame:CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, 200)
+    CGRect rect = CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, 200);
+    _banner = [[XDBanner alloc]initWithFrame:rect
                                  sourceItems:@[@"banner1.jpg",@"banner2.jpg",@"banner1.jpg"]
                                        setUp:setup
                                      itemTap:^(NSInteger index, id item) {
