@@ -101,10 +101,16 @@ typedef void(^ItemBlock)(NSInteger index, id item);
     self.bannerView.decelerationRate = 0.8;
     self.bannerView.showsHorizontalScrollIndicator = NO;
     self.bannerView.showsVerticalScrollIndicator = NO;
+    self.bannerView.backgroundColor = [UIColor whiteColor];
     [self addSubview:self.bannerView];
     
     [self.bannerView registerClass:[XDBannerItem class] forCellWithReuseIdentifier:itemID];
     
+    [self bannerBeginStatus];
+}
+
+//轮播图初始状态
+- (void)bannerBeginStatus {
     if (self.itemSourceOriginal && self.itemSourceOriginal.count > 0) {
         //让初始状态从第二个item开始
         [self.bannerView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:1 inSection:0] atScrollPosition:UICollectionViewScrollPositionNone animated:NO];
@@ -121,11 +127,20 @@ typedef void(^ItemBlock)(NSInteger index, id item);
 }
 
 - (void)xd_refreshBannerBySourceItems:(NSArray *)sourceitems {
-    self.itemSourceOriginal = sourceitems;
-    self.pageIndicator.hidden = self.setUp.needPageIndicator ? sourceitems.count > 1 ? NO : YES : YES;
-    self.itemSource = [self sourceHandle:sourceitems];
-    [self.bannerView reloadData];
-    [self loopMethod];
+    //当首次拥有数据时要设置轮播图初始状态
+    if (!self.itemSourceOriginal || self.itemSourceOriginal.count <= 1) {
+        self.itemSourceOriginal = sourceitems;
+        self.itemSource = [self sourceHandle:sourceitems];
+        [self.bannerView reloadData];
+        [self bannerBeginStatus];
+        
+    } else {
+        self.itemSourceOriginal = sourceitems;
+        self.itemSource = [self sourceHandle:sourceitems];
+        [self.bannerView reloadData];
+        [self loopMethod];
+    }
+    
     [self bannerStatusHandle];
 }
 
