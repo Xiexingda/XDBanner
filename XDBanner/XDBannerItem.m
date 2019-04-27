@@ -7,7 +7,7 @@
 //
 
 #import "XDBannerItem.h"
-#import <objc/runtime.h>
+#import "UIImageView+WebCache.h"
 
 @interface XDBannerItem ()
 @property (nonatomic, strong) UIImageView *itemImage;
@@ -44,17 +44,25 @@
     [self.contentView addSubview:_itemImage];
 }
 
-- (void)configItemBySource:(id)source itemTap:(void (^)(id))itemtap {
+- (void)configItemBySource:(id)source index:(NSIndexPath *)index itemTap:(void (^)(NSInteger, id))itemtap {
+    __weak typeof(self) weakSelf = self;
     if ([source isKindOfClass:[UIImage class]]) {
         _itemImage.image = source;
         self.contentView.backgroundColor = [UIColor colorWithPatternImage:source];
         
     } else if ([source isKindOfClass:[NSString class]]) {
-        UIImage *image = [UIImage imageNamed:source];
-        if (image) {
-            _itemImage.image = image;
-            self.contentView.backgroundColor = [UIColor colorWithPatternImage:image];
-        }
+        [_itemImage sd_setImageWithURL:[NSURL URLWithString:source] completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+            if (error) {
+                UIImage *image = [UIImage imageNamed:source];
+                if (image) {
+                    weakSelf.itemImage.image = image;
+                    weakSelf.contentView.backgroundColor = [UIColor colorWithPatternImage:image];
+                }
+            } else {
+                weakSelf.contentView.backgroundColor = [UIColor colorWithPatternImage:image];
+            }
+        }];
+        
     } else if ([source isKindOfClass:[NSData class]]) {
         UIImage *image = [UIImage imageWithData:source];
         if (image) {
@@ -65,7 +73,7 @@
     
     [_itemImage tapBlock:^(id obj) {
         if (itemtap) {
-            itemtap(source);
+            itemtap(index.row - 1 ,source);
         }
     }];
 }

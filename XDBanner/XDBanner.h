@@ -15,4 +15,7 @@
                         setUp:(XDBannerSetUp *)setup
                       itemTap:(void(^)(NSInteger index, id item))itemtap
                   currentItem:(void(^)(NSInteger index, id item))currentitem;
+
+//刷新
+- (void)xd_refreshBannerBySourceItems:(NSArray *)sourceitems;
 @end

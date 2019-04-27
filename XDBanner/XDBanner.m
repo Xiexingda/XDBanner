@@ -9,6 +9,11 @@
 #import "XDBanner.h"
 #import "XDBannerItem.h"
 
+typedef NS_ENUM(NSInteger, DraggingStatus) {
+    D_Default,
+    D_Dragging
+};
+
 static NSString *itemID = @"XDBannerItemIDF";
 typedef void(^ItemBlock)(NSInteger index, id item);
 
@@ -23,9 +28,13 @@ typedef void(^ItemBlock)(NSInteger index, id item);
 @property (nonatomic, strong) UIPageControl *pageIndicator;                 //指示器
 @property (nonatomic, assign) __block NSInteger bufferIndex;
 @property (nonatomic, strong) dispatch_source_t time;
+@property (nonatomic, assign) DraggingStatus status;
 @end
 
 @implementation XDBanner
+- (void)dealloc {
+    [self endTime];
+}
 
 - (UICollectionViewFlowLayout *)bannerLayout {
     if (!_bannerLayout) {
@@ -37,6 +46,7 @@ typedef void(^ItemBlock)(NSInteger index, id item);
 - (UIPageControl *)pageIndicator {
     if (!_pageIndicator) {
         _pageIndicator = [[UIPageControl alloc]init];
+        _pageIndicator.userInteractionEnabled = NO;
     }
     return _pageIndicator;
 }
@@ -136,12 +146,11 @@ typedef void(^ItemBlock)(NSInteger index, id item);
 - (void)loopMethod {
     if (!self.itemSourceOriginal || self.itemSourceOriginal <= 0) {return;}
     CGFloat c_w = CGRectGetWidth(self.frame);
-    CGFloat c_x = self.bannerView.contentOffset.x < 0 ? 0 : self.bannerView.contentOffset.x > c_w * (self.itemSource.count - 1) ? c_w * (self.itemSource.count - 1) : self.bannerView.contentOffset.x;
     
-    if (c_x <= 0) {
-        self.bannerView.contentOffset = CGPointMake(c_w * (self.itemSource.count-2), 0);
+    if (self.bannerView.contentOffset.x <= 0) {
+        self.bannerView.contentOffset = CGPointMake(c_w * (self.itemSource.count - 2), 0);
         
-    } else if (c_x >= c_w * (self.itemSource.count - 1)){
+    } else if (self.bannerView.contentOffset.x >= (self.itemSource.count - 1) * c_w) {
         self.bannerView.contentOffset = CGPointMake(c_w, 0);
     }
     
@@ -161,7 +170,7 @@ typedef void(^ItemBlock)(NSInteger index, id item);
 
 - (void)hasChangedToIndex:(NSUInteger)index {
     if (self.nowBlock) {
-        self.nowBlock(index, self.itemSourceOriginal[index-1]);
+        self.nowBlock(index-1, self.itemSourceOriginal[index-1]);
     }
     self.pageIndicator.currentPage = index-1;
 }
@@ -209,31 +218,35 @@ typedef void(^ItemBlock)(NSInteger index, id item);
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    __weak typeof(self) weakSelf = self;
     XDBannerItem *item = [collectionView dequeueReusableCellWithReuseIdentifier:itemID forIndexPath:indexPath];
-    [item configItemBySource:self.itemSource[indexPath.row] itemTap:^(id source) {
-        if (weakSelf.tapBlock) {
-            weakSelf.tapBlock(weakSelf.bufferIndex-1, source);
-        }
-    }];
+    [item configItemBySource:self.itemSource[indexPath.row] index:indexPath itemTap:self.tapBlock];
     return item;
 }
 
 #pragma mark
 #pragma mark -- delegate
+
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    [self loopMethod];
+    if (self.status == D_Dragging) {
+        [self loopMethod];
+    }
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    self.status = D_Dragging;
     [self endTime];
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    self.status = D_Default;
     [self startTime];
 }
 
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    [self loopMethod];
+}
+
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView {
-    [self startTime];
+    [self loopMethod];
 }
 @end

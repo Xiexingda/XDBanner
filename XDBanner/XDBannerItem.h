@@ -10,6 +10,6 @@
 #import "UIView+XDBannerHandle.h"
 
 @interface XDBannerItem : UICollectionViewCell
-- (void)configItemBySource:(id)source itemTap:(void(^)(id source))itemtap;
+- (void)configItemBySource:(id)source index:(NSIndexPath *)index itemTap:(void(^)(NSInteger index,id source))itemtap;
 @end
 
