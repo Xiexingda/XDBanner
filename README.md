@@ -21,6 +21,10 @@
 
     [self.view addSubview:_banner];
 ```
+4. 刷新数据
+```
+[_banner xd_refreshBannerBySourceItems:sources];
+```
 # 效果
 
 ![image](https://github.com/Xiexingda/XDBanner/blob/master/show.png)

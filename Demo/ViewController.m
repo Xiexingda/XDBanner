@@ -30,7 +30,6 @@
                                      } currentItem:^(NSInteger index, id item) {
                                          NSLog(@"%@---%ld",item, (long)index);
                                      }];
-    
     [self.view addSubview:_banner];
 }
 
